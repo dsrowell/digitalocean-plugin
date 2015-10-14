@@ -265,6 +265,15 @@ public class Cloud extends AbstractCloudImpl {
                 }), template.getNumExecutors()));
 
                 excessWorkload -= template.getNumExecutors();
+                
+                // DigitalOcean has a rate limit of 5000 requests per hour,
+                // by sleeping for one second, we can limit requests and avoid
+                // getting an exception thrown
+                try {
+                	Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                	// ignore
+                }
             }
 
             LOGGER.info("Provisioning " + nodes.size() + " DigitalOcean nodes");
