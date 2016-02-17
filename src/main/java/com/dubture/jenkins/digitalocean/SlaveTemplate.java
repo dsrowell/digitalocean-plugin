@@ -190,6 +190,7 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
             Droplet createdDroplet = apiClient.createDroplet(droplet);
             return newSlave(createdDroplet, privateKey);
         } catch (Exception e) {
+        	LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
             e.printStackTrace(logger);
             throw new AssertionError();
         }

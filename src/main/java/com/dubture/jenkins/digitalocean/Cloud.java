@@ -177,14 +177,30 @@ public class Cloud extends AbstractCloudImpl {
 
         LOGGER.log(Level.INFO, "Adding provisioned slave " + imageId);
 
-        int estimatedTotalSlaves;
-        int estimatedDropletSlaves;
-        try {
-            estimatedTotalSlaves = countCurrentDropletsSlaves(null);
-            estimatedDropletSlaves = countCurrentDropletsSlaves(imageId);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.getMessage(), e);
-            return false;
+        int tries = 10;
+        int estimatedTotalSlaves = 0;
+        int estimatedDropletSlaves = 0;
+        while (tries-- > 0) {
+	        try {
+	            estimatedTotalSlaves = countCurrentDropletsSlaves(null);
+	            estimatedDropletSlaves = countCurrentDropletsSlaves(imageId);
+	        } catch (Exception e) {
+	        	if (e instanceof DigitalOceanException && "API Rate limit exceeded.".equals(e.getMessage())) {
+	        		try {
+						Thread.sleep(5000);
+					} catch (InterruptedException e1) {
+						// swallow
+					}
+	        	} else {
+	        		LOGGER.log(Level.WARNING, e.getMessage(), e);
+	        		return false;
+	        	}
+	        }
+        }
+        
+        if (tries == 0) {
+    		LOGGER.log(Level.WARNING, "Too many tries after rate limit exceeded");
+    		return false;
         }
 
         synchronized (provisioningDroplets) {
